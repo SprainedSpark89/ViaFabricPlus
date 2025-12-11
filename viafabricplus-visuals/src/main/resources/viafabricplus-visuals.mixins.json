@@ -4,11 +4,9 @@
   "package": "com.viaversion.viafabricplus.visuals.injection.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "classic.creative_menu.MixinCreativeInventoryScreen",
-    "classic.walking_animation.MixinBipedEntityModel",
     "classic.creative_menu.MixinCreativeModeInventoryScreen",
     "classic.walking_animation.MixinHumanoidModel",
-	"classic.walking_animation.MixinLivingEntityRenderer",
+    "classic.walking_animation.MixinLivingEntityRenderer",
     "filter_game_mode_selections.MixinGameModeSwitcherScreen",
     "filter_game_mode_selections.MixinGameModeSwitcherScreen_GameModeIcon",
     "force_unicode_font.MixinLanguageManager",
