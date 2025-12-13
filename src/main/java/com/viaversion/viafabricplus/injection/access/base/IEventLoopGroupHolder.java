@@ -19,21 +19,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.viaversion.viafabricplus.injection.mixin.features.interaction.container_clicking;
+package com.viaversion.viafabricplus.injection.access.base;
 
-import com.viaversion.viaversion.api.data.entity.EntityTracker;
-import com.viaversion.viaversion.protocols.v1_21_4to1_21_5.rewriter.BlockItemPacketRewriter1_21_5;
-import com.viaversion.viaversion.rewriter.StructuredItemRewriter;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+public interface IEventLoopGroupHolder {
 
-@Mixin(value = {BlockItemPacketRewriter1_21_5.class, StructuredItemRewriter.class}, remap = false)
-public abstract class MixinStructuredItemRewriter {
+    boolean viaFabricPlus$isConnecting();
 
-    @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lcom/viaversion/viaversion/api/data/entity/EntityTracker;canInstaBuild()Z"))
-    private boolean dontCancelPackets(EntityTracker entityTracker) {
-        return true;
-    }
+    void viaFabricPlus$setConnecting(boolean connecting);
 
 }

@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import net.minecraft.client.multiplayer.ServerStatusPinger;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.server.network.EventLoopGroupHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -36,7 +37,7 @@ public abstract class MixinServerStatusPinger {
      * @reason Remove legacy ping which didn't even work
      */
     @Overwrite
-    public void pingLegacyServer(InetSocketAddress socketAddress, ServerAddress address, ServerData serverInfo) {
+    public void pingLegacyServer(InetSocketAddress inetSocketAddress, final ServerAddress serverAddress, final ServerData serverData, EventLoopGroupHolder eventLoopGroupHolder) {
     }
 
 }
