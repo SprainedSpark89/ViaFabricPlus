@@ -19,34 +19,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.viaversion.viafabricplus.visuals.injection.mixin.instant_sneaking;
+package com.viaversion.viafabricplus.injection.mixin.features.block.interaction;
 
-import com.viaversion.viafabricplus.visuals.settings.VisualSettings;
-import net.minecraft.client.Camera;
-import net.minecraft.world.entity.Entity;
+import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.ShelfBlock;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(Camera.class)
-public abstract class MixinCamera {
+@Mixin(ShelfBlock.class)
+public abstract class MixinShelfBlock {
 
-    @Shadow
-    private float eyeHeight;
-
-    @Shadow
-    private float eyeHeightOld;
-
-    @Shadow
-    private Entity entity;
-
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/attribute/EnvironmentAttributeProbe;tick(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/phys/Vec3;)V", shift = At.Shift.BEFORE))
-    private void sneakInstantly(CallbackInfo ci) {
-        if (VisualSettings.INSTANCE.sneakInstantly.isEnabled()) {
-            eyeHeight = eyeHeightOld = entity.getEyeHeight();
-        }
+    @Redirect(method = "useItemOn", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 0))
+    private boolean swingHand(ItemStack instance) {
+        return ProtocolTranslator.getTargetVersion().newerThanOrEqualTo(ProtocolVersion.v1_21_11) && instance.isEmpty();
     }
 
 }
