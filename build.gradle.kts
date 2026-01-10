@@ -12,12 +12,14 @@ allprojects {
     setupViaPublishing()
 
     repositories {
+        // Keep them in sync with docs/DEVELOPER_API.md
         maven("https://repo.viaversion.com")
         maven("https://maven.lenni0451.net/everything")
         maven("https://maven.terraformersmc.com/releases")
         maven("https://jitpack.io") {
             content {
                 includeGroup("com.github.oryxel1")
+                includeGroup("dev.kastle.NetworkCompatible")
             }
         }
 
@@ -60,6 +62,12 @@ dependencies {
     jij("net.lenni0451:Reflect:1.6.1")
     jij("dev.kastle.netty:netty-transport-raknet:1.4.0") {
         exclude(group = "io.netty")
+    }
+    jij("dev.kastle.NetworkCompatible:netty-transport-nethernet:6a8915db93") {
+        exclude(group = "io.netty")
+    }
+    arrayOf("windows-x86_64", "windows-aarch64", "linux-x86_64", "linux-aarch64", "macos-aarch64").forEach {
+        jij("dev.kastle.webrtc:webrtc-java:1.0.3:$it")
     }
     jij("de.florianmichael:Classic4J:2.2.1")
 }
