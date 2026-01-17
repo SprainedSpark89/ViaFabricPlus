@@ -19,24 +19,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.viaversion.viafabricplus.injection.mixin.features.world.border_chunk_rendering;
+package com.viaversion.viafabricplus.protocoltranslator.impl.command;
 
-import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
-import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
-import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import com.viaversion.viafabricplus.screen.impl.SettingsScreen;
+import com.viaversion.viaversion.api.command.ViaCommandSender;
 
-@Mixin(SectionRenderDispatcher.RenderSection.class)
-public abstract class MixinBuiltChunk {
+public final class SettingsCommand implements VFPViaSubCommand {
 
-    @Inject(method = "hasAllNeighbors", at = @At("HEAD"), cancellable = true)
-    private void modifyRenderCondition(CallbackInfoReturnable<Boolean> cir) {
-        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_8)) {
-            cir.setReturnValue(true);
-        }
+    @Override
+    public String name() {
+        return "settings";
+    }
+
+    @Override
+    public String description() {
+        return "Opens ViaFabricPlus's configuration/options screen";
+    }
+
+    @Override
+    public boolean execute(ViaCommandSender sender, String[] args) {
+        SettingsScreen.INSTANCE.open(null);
+        return true;
     }
 
 }
