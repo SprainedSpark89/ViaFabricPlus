@@ -24,15 +24,19 @@ package com.viaversion.viafabricplus.protocoltranslator.impl.platform;
 import com.viaversion.viafabricplus.ViaFabricPlusImpl;
 import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
 import com.viaversion.viafabricplus.protocoltranslator.impl.viaversion.ViaFabricPlusConfig;
+import com.viaversion.viafabricplus.protocoltranslator.protocol.ViaFabricPlusProtocol;
 import com.viaversion.viafabricplus.protocoltranslator.util.JLoggerToSLF4J;
+import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
+import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.configuration.AbstractViaConfig;
 import com.viaversion.viaversion.libs.gson.JsonArray;
 import com.viaversion.viaversion.libs.gson.JsonObject;
+import com.viaversion.viaversion.platform.UserConnectionViaVersionPlatform;
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
-import com.viaversion.viaversion.platform.UserConnectionViaVersionPlatform;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
@@ -40,20 +44,15 @@ import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
 import org.slf4j.LoggerFactory;
 
-public final class ViaFabricPlusViaVersionPlatformImpl extends UserConnectionViaVersionPlatform {
+public final class ViaFabricPlusViaVersionPlatform extends UserConnectionViaVersionPlatform {
 
-    public ViaFabricPlusViaVersionPlatformImpl(File dataFolder) {
+    public ViaFabricPlusViaVersionPlatform(File dataFolder) {
         super(dataFolder);
     }
 
     @Override
     public Logger createLogger(final String name) {
         return new JLoggerToSLF4J(LoggerFactory.getLogger(name));
-    }
-
-    @Override
-    public boolean isProxy() {
-        return true;
     }
 
     @Override
@@ -69,6 +68,22 @@ public final class ViaFabricPlusViaVersionPlatformImpl extends UserConnectionVia
     @Override
     protected AbstractViaConfig createConfig() {
         return new ViaFabricPlusConfig(new File(getDataFolder(), "viaversion.yml"), this.getLogger());
+    }
+
+    @Override
+    public void sendCustomPayload(UserConnection connection, String channel, byte[] message) {
+        final PacketWrapper customPayload = PacketWrapper.create(ViaFabricPlusProtocol.INSTANCE.getCustomPayloadPacketType(), connection);
+        customPayload.write(Types.STRING, channel);
+        customPayload.write(Types.REMAINING_BYTES, message);
+        customPayload.scheduleSendToServer(ViaFabricPlusProtocol.class);
+    }
+
+    @Override
+    public void sendCustomPayloadToClient(final UserConnection connection, final String channel, final byte[] message) {
+        final PacketWrapper customPayload = PacketWrapper.create(ViaFabricPlusProtocol.INSTANCE.getClientboundCustomPayloadPacketType(), connection);
+        customPayload.write(Types.STRING, channel);
+        customPayload.write(Types.REMAINING_BYTES, message);
+        customPayload.scheduleSend(ViaFabricPlusProtocol.class);
     }
 
     @Override
@@ -107,12 +122,6 @@ public final class ViaFabricPlusViaVersionPlatformImpl extends UserConnectionVia
         platformDump.add("mods", mods);
 
         return platformDump;
-    }
-
-    @Override
-    public File getDataFolder() {
-        // Move ViaLoader files directly into root folder
-        return ViaFabricPlusImpl.INSTANCE.getPath().toFile();
     }
 
 }

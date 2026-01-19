@@ -30,12 +30,13 @@ import com.viaversion.viabackwards.ViaBackwardsPlatformImpl;
 import com.viaversion.viafabricplus.base.Events;
 import com.viaversion.viafabricplus.injection.access.base.IConnection;
 import com.viaversion.viafabricplus.protocoltranslator.impl.command.ViaFabricPlusCommandHandler;
-import com.viaversion.viafabricplus.protocoltranslator.impl.platform.ViaFabricPlusViaLegacyPlatformImpl;
-import com.viaversion.viafabricplus.protocoltranslator.impl.platform.ViaFabricPlusViaVersionPlatformImpl;
-import com.viaversion.viafabricplus.protocoltranslator.impl.viaversion.ViaFabricPlusLoader;
+import com.viaversion.viafabricplus.protocoltranslator.impl.platform.ViaFabricPlusViaLegacyPlatform;
+import com.viaversion.viafabricplus.protocoltranslator.impl.platform.ViaFabricPlusViaVersionPlatform;
+import com.viaversion.viafabricplus.protocoltranslator.impl.viaversion.ViaFabricPlusPlatformLoader;
 import com.viaversion.viafabricplus.protocoltranslator.netty.NoReadFlowControlHandler;
 import com.viaversion.viafabricplus.protocoltranslator.netty.ViaFabricPlusDecoder;
 import com.viaversion.viafabricplus.protocoltranslator.protocol.ViaFabricPlusProtocol;
+import com.viaversion.viafabricplus.protocoltranslator.util.ConfigPatcher;
 import com.viaversion.viafabricplus.protocoltranslator.util.NoPacketSendChannel;
 import com.viaversion.viaversion.ViaManagerImpl;
 import com.viaversion.viaversion.api.Via;
@@ -60,10 +61,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.flow.FlowControlHandler;
 import io.netty.util.AttributeKey;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -90,18 +89,15 @@ import net.raphimc.vialegacy.netty.PreNettyLengthPrepender;
 import net.raphimc.vialegacy.netty.PreNettyLengthRemover;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 
-/**
- * This class represents the whole Protocol Translator, here all important variables are stored
- */
 public final class ProtocolTranslator {
 
     /**
-     * These attribute keys are used to track the main connections of Minecraft and ViaVersion, so that they can be used later during the connection to send packets.
+     * Internal state tracking for the game client connection, used in various Via providers
      */
     public static final AttributeKey<Connection> CLIENT_CONNECTION_ATTRIBUTE_KEY = AttributeKey.newInstance("viafabricplus-clientconnection");
 
     /**
-     * This attribute stores the forced version for the current connection (if you set a specific version in the Edit Server screen)
+     * Stores the target version ViaVersion is translating to. This will be always set, even if the {@link #NATIVE_VERSION} is set.
      */
     public static final AttributeKey<ProtocolVersion> TARGET_VERSION_ATTRIBUTE_KEY = AttributeKey.newInstance("viafabricplus-targetversion");
 
@@ -156,9 +152,6 @@ public final class ProtocolTranslator {
     public static void injectViaPipeline(final Connection connection, final Channel channel) {
         final IConnection mixinClientConnection = (IConnection) connection;
         final ProtocolVersion serverVersion = mixinClientConnection.viaFabricPlus$getTargetVersion();
-        if (serverVersion == NATIVE_VERSION) {
-            return;
-        }
 
         channel.attr(ProtocolTranslator.CLIENT_CONNECTION_ATTRIBUTE_KEY).set(connection);
         channel.attr(ProtocolTranslator.TARGET_VERSION_ATTRIBUTE_KEY).set(serverVersion);
@@ -228,9 +221,10 @@ public final class ProtocolTranslator {
     }
 
     public static ProtocolVersion getTargetVersion(final Channel channel) {
-        if (channel == null || !channel.hasAttr(TARGET_VERSION_ATTRIBUTE_KEY)) {
-            throw new IllegalStateException("Target version attribute not set");
+        if (!channel.hasAttr(TARGET_VERSION_ATTRIBUTE_KEY)) {
+            throw new IllegalStateException("ViaFabricPlus has not injected into that channel yet!");
         }
+
         return channel.attr(TARGET_VERSION_ATTRIBUTE_KEY).get();
     }
 
@@ -300,38 +294,6 @@ public final class ProtocolTranslator {
         return ((IConnection) handler.getConnection()).viaFabricPlus$getUserConnection();
     }
 
-    /**
-     * Apply recommended config options to the ViaVersion config files
-     *
-     * @param path The path where the ViaVersion config files is located
-     */
-    private static void patchConfigs(final Path path) {
-        try {
-            final Path viaVersionConfig = path.resolve("viaversion.yml");
-            Files.writeString(viaVersionConfig, """
-                fix-infested-block-breaking: false
-                shield-blocking: false
-                no-delay-shield-blocking: true
-                handle-invalid-item-count: true
-                chunk-border-fix: true
-                """, StandardOpenOption.CREATE_NEW);
-        } catch (FileAlreadyExistsException ignored) {
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to patch ViaVersion config", e);
-        }
-
-        try {
-            final Path viaLegacyConfig = path.resolve("vialegacy.yml");
-            Files.writeString(viaLegacyConfig, """
-                legacy-skull-loading: true
-                legacy-skin-loading: true
-                """, StandardOpenOption.CREATE_NEW);
-        } catch (FileAlreadyExistsException ignored) {
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to patch ViaLegacy config", e);
-        }
-    }
-
     private static void changeBedrockProtocolName() {
         final ProtocolVersion bedrockLatest = RStream.of(BedrockProtocolVersion.class).fields().by("bedrockLatest").get();
 
@@ -349,7 +311,12 @@ public final class ProtocolTranslator {
         if (SharedConstants.getProtocolVersion() != NATIVE_VERSION.getOriginalVersion()) {
             throw new IllegalStateException("Native version is not the same as the current version");
         }
-        patchConfigs(path);
+
+        try {
+            ConfigPatcher.patch(path.resolve("viaversion.yml"));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to patch ViaVersion config", e);
+        }
 
         // Register command callback for /viafabricplus
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
@@ -362,13 +329,13 @@ public final class ProtocolTranslator {
         return CompletableFuture.runAsync(() -> {
             // Load ViaVersion and register all platforms and their components
             ViaManagerImpl.initAndLoad(
-                new ViaFabricPlusViaVersionPlatformImpl(path.toFile()),
+                new ViaFabricPlusViaVersionPlatform(path.toFile()),
                 new NoopInjector(),
                 new ViaFabricPlusCommandHandler(),
-                new ViaFabricPlusLoader(),
+                new ViaFabricPlusPlatformLoader(),
                 () -> {
                     new ViaBackwardsPlatformImpl();
-                    new ViaFabricPlusViaLegacyPlatformImpl();
+                    new ViaFabricPlusViaLegacyPlatform();
                     new ViaAprilFoolsPlatformImpl();
                     new ViaBedrockPlatformImpl();
                 }
