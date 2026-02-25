@@ -33,10 +33,6 @@ subprojects {
 
 }
 
-base {
-    archivesName.set("ViaFabricPlus") // Override the set name as it's lowercase for publishing
-}
-
 project.property("updating_minecraft").toString().toBoolean().let {
     configureTestTasks(it)
     if (it) {
@@ -52,7 +48,7 @@ includeFabricSubmodule("viafabricplus-api")
 includeFabricSubmodule("viafabricplus-visuals")
 
 dependencies {
-    jij("net.lenni0451:Reflect:1.6.1")
+    jij("net.lenni0451:Reflect:1.6.2")
     jij("de.florianreuth:classic4j:2.3.0")
     configureBedrockDependencies()
 
