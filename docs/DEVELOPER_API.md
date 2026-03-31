@@ -17,7 +17,7 @@ If you also want to access **internal features** (including the legacy compatibi
 
 ```kotlin
 repositories {
-    // https://github.com/ViaVersion/ViaFabricPlus/blob/main/docs/DEVELOPER_API.md
+    // https://github.com/ViaVersion/ViaFabricPlus/blob/ver/<version>/docs/DEVELOPER_API.md
     maven("https://repo.viaversion.com")
     maven("https://maven.lenni0451.net/everything")
     maven("https://maven.terraformersmc.com/releases")
@@ -30,8 +30,8 @@ repositories {
 
 dependencies {
     // Replace with latest release
-    modRuntimeOnly("com.viaversion:viafabricplus:x.x.x")
-    modCompileOnly("com.viaversion:viafabricplus-api:x.x.x")
+    runtimeOnly("com.viaversion:viafabricplus:x.x.x")
+    compileOnly("com.viaversion:viafabricplus-api:x.x.x")
 }
 ```
 
@@ -51,8 +51,8 @@ repositories {
 
 dependencies {
     // Replace with latest release
-    modRuntimeOnly("com.viaversion:viafabricplus:x.x.x")
-    modCompileOnly("com.viaversion:viafabricplus-api:x.x.x")
+    runtimeOnly("com.viaversion:viafabricplus:x.x.x")
+    compileOnly("com.viaversion:viafabricplus-api:x.x.x")
 }
 ```
 

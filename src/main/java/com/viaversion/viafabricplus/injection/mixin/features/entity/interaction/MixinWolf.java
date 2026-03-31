@@ -75,9 +75,9 @@ public abstract class MixinWolf extends TamableAnimal implements NeutralMob {
                         cir.setReturnValue(InteractionResult.SUCCESS);
                         return;
                     }
-                } else if (item instanceof DyeItem dyeItem) {
-                    final DyeColor dyeColor = dyeItem.getDyeColor();
-                    if (dyeColor != this.getCollarColor()) {
+                } else if (item instanceof DyeItem) {
+                    final DyeColor dyeColor = itemStack.get(DataComponents.DYE);
+                    if (dyeColor != null && dyeColor != this.getCollarColor()) {
                         this.setCollarColor(dyeColor);
                         if (!player.getAbilities().instabuild) itemStack.shrink(1);
                         cir.setReturnValue(InteractionResult.SUCCESS);
