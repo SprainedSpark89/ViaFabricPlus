@@ -44,11 +44,18 @@ val jij = configureApiJij()
 
 configureVVDependencies("jij")
 
-includeFabricApiModules("fabric-resource-loader-v1", "fabric-resource-loader-v0", "fabric-networking-api-v1", "fabric-command-api-v2", "fabric-lifecycle-events-v1", "fabric-particles-v1", "fabric-registry-sync-v0")
-
 dependencies {
     jij(project(":viafabricplus-api"))
     jij(project(":viafabricplus-visuals"))
+
+    jij(fabricApi.module("fabric-api-base", fabricApiVersion))
+    jij(fabricApi.module("fabric-resource-loader-v1", fabricApiVersion))
+    jij(fabricApi.module("fabric-resource-loader-v0", fabricApiVersion))
+    jij(fabricApi.module("fabric-networking-api-v1", fabricApiVersion))
+    jij(fabricApi.module("fabric-command-api-v2", fabricApiVersion))
+    jij(fabricApi.module("fabric-lifecycle-events-v1", fabricApiVersion))
+    jij(fabricApi.module("fabric-particles-v1", fabricApiVersion))
+    jij(fabricApi.module("fabric-registry-sync-v0", fabricApiVersion))
 
     jij("net.lenni0451:Reflect:1.6.2")
     jij("de.florianreuth:classic4j:2.3.0")
