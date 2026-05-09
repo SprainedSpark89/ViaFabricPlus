@@ -23,11 +23,13 @@ package com.viaversion.viafabricplus.injection.mixin.features.entity.dimensions;
 
 import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityAttachment;
+import net.minecraft.world.entity.EntityAttachments;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.camel.Camel;
-import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.equine.AbstractHorse;
+import net.minecraft.world.entity.animal.equine.Horse;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,48 +37,24 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(Camel.class)
-public abstract class MixinCamel extends AbstractHorse {
-
-    public MixinCamel(EntityType<? extends AbstractHorse> entityType, Level world) {
-        super(entityType, world);
-    }
-
-    @Inject(method = "getAgeScale", at = @At("HEAD"), cancellable = true)
-    private void changeBabyScale(CallbackInfoReturnable<Float> cir) {
-        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_21_11) && this.isBaby()) {
-            cir.setReturnValue(0.45F);
-        }
-    }
-
-    @Override
-    public void onPassengerTurned(Entity passenger) {
-        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_20) && this.getControllingPassenger() != passenger) {
-            this.viaFabricPlus$clampPassengerYaw1_20_1(passenger);
-        }
-    }
-
-    @Override
-    protected void positionRider(Entity passenger, MoveFunction positionUpdater) {
-        super.positionRider(passenger, positionUpdater);
-
-        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_20)) {
-            this.viaFabricPlus$clampPassengerYaw1_20_1(passenger);
-        }
-    }
+@Mixin(Horse.class)
+public abstract class MixinHorse extends AbstractHorse {
 
     @Unique
-    private void viaFabricPlus$clampPassengerYaw1_20_1(final Entity passenger) {
-        passenger.setYBodyRot(this.getYRot());
-        final float passengerYaw = passenger.getYRot();
+    private static final EntityDimensions viaFabricPlus$baby_dimensions_r1_21_11 = EntityType.HORSE
+        .getDimensions()
+        .withAttachments(EntityAttachments.builder().attach(EntityAttachment.PASSENGER, 0.0F, EntityType.HORSE.getHeight() + 0.125F, 0.0F))
+        .scale(0.5F);
 
-        final float deltaDegrees = Mth.wrapDegrees(passengerYaw - this.getYRot());
-        final float clampedDelta = Mth.clamp(deltaDegrees, -160.0F, 160.0F);
-        passenger.yRotO += clampedDelta - deltaDegrees;
+    public MixinHorse(final EntityType<? extends AbstractHorse> type, final Level level) {
+        super(type, level);
+    }
 
-        final float newYaw = passengerYaw + clampedDelta - deltaDegrees;
-        passenger.setYRot(newYaw);
-        passenger.setYHeadRot(newYaw);
+    @Inject(method = "getDefaultDimensions", at = @At("HEAD"), cancellable = true)
+    private void changeBabyDimensions(Pose pose, CallbackInfoReturnable<EntityDimensions> cir) {
+        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_21_11) && this.isBaby()) {
+            cir.setReturnValue(viaFabricPlus$baby_dimensions_r1_21_11);
+        }
     }
 
 }
