@@ -45,8 +45,12 @@ val jij = configureApiJij()
 configureVVDependencies("jij")
 
 dependencies {
-    jij(project(":viafabricplus-api"))
-    jij(project(":viafabricplus-visuals"))
+    jij(project(":viafabricplus-api")) {
+        exclude("net.fabricmc", "fabric-loader")
+    }
+    jij(project(":viafabricplus-visuals")) {
+        exclude("net.fabricmc", "fabric-loader")
+    }
 
     jij(fabricApi.module("fabric-api-base", fabricApiVersion))
     jij(fabricApi.module("fabric-resource-loader-v1", fabricApiVersion))
@@ -86,10 +90,10 @@ fun configureBedrockDependencies() {
 
 fun Project.configureVVDependencies(configuration: String) {
     dependencies {
-        configuration("com.viaversion:viaversion-common:5.9.1-SNAPSHOT")
-        configuration("com.viaversion:viabackwards-common:5.9.1-SNAPSHOT")
-        configuration("com.viaversion:viaaprilfools-common:4.2.1-SNAPSHOT")
-        configuration("net.raphimc:ViaLegacy:3.0.15")
+        configuration("com.viaversion:viaversion-common:5.9.2-SNAPSHOT")
+        configuration("com.viaversion:viabackwards-common:5.9.1")
+        configuration("com.viaversion:viaaprilfools-common:4.2.1")
+        configuration("net.raphimc:ViaLegacy:3.0.16")
         configuration("net.raphimc:ViaBedrock:0.0.27-SNAPSHOT") {
             exclude(group = "com.mojang", module = "brigadier")
             exclude(group = "at.yawk.lz4", module = "lz4-java")
