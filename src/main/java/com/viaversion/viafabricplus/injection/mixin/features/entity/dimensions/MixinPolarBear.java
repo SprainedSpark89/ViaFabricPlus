@@ -19,26 +19,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.viaversion.viafabricplus.injection.mixin.features.item.interaction;
+package com.viaversion.viafabricplus.injection.mixin.features.entity.dimensions;
 
 import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.BoneMealItem;
-import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.polarbear.PolarBear;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(BoneMealItem.class)
-public abstract class MixinBoneMealItem {
+@Mixin(PolarBear.class)
+public abstract class MixinPolarBear {
 
-    @Inject(method = "useOn", at = @At(value = "RETURN", ordinal = 1), cancellable = true)
-    private void dontSwingHand(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
-        if (ProtocolTranslator.getTargetVersion().equalTo(ProtocolVersion.v26_1)) {
-            cir.setReturnValue(InteractionResult.PASS);
-        }
+    @Redirect(method = "getDefaultDimensions", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/animal/polarbear/PolarBear;isBaby()Z"))
+    private boolean dontChangeScale(PolarBear instance) {
+        return ProtocolTranslator.getTargetVersion().newerThan(ProtocolVersion.v26_1) && instance.isBaby();
     }
 
 }

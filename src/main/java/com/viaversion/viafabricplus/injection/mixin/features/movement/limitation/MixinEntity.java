@@ -19,42 +19,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.viaversion.viafabricplus.injection.mixin.features.entity.dimensions;
+package com.viaversion.viafabricplus.injection.mixin.features.movement.limitation;
 
 import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.npc.villager.Villager;
-import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(Villager.class)
-public abstract class MixinVillager {
+@Mixin(Entity.class)
+public abstract class MixinEntity {
 
     @Shadow
-    @Final
-    private static EntityDimensions BABY_DIMENSIONS;
+    private int id;
 
-    @Unique
-    private static final EntityDimensions viaFabricPlus$baby_dimensions_r26_1 = EntityDimensions.scalable(0.49F, 0.99F).withEyeHeight(0.63F);
-
-    @Redirect(method = "getDefaultDimensions", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/npc/villager/Villager;BABY_DIMENSIONS:Lnet/minecraft/world/entity/EntityDimensions;", opcode = Opcodes.GETSTATIC))
-    private EntityDimensions changeBabyDimensions() {
+    @Inject(method = "getId", at = @At("HEAD"), cancellable = true)
+    private void allowZeroId(CallbackInfoReturnable<Integer> cir) {
         if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v26_1)) {
-            return viaFabricPlus$baby_dimensions_r26_1;
-        } else {
-            return BABY_DIMENSIONS;
+            cir.setReturnValue(this.id); // TODO Remove once merged in VV on protocol level
         }
-    }
-
-    @Redirect(method = "getDefaultDimensions", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/npc/villager/Villager;isBaby()Z"))
-    private boolean dontChangeScale(Villager instance) {
-        return ProtocolTranslator.getTargetVersion().newerThan(ProtocolVersion.v1_21_11) && instance.isBaby();
     }
 
 }
