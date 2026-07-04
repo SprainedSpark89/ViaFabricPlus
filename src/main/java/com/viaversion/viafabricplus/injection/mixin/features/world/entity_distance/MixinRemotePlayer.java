@@ -19,27 +19,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.viaversion.viafabricplus.injection.mixin.features.movement.limitation;
+package com.viaversion.viafabricplus.injection.mixin.features.world.entity_distance;
 
+import com.mojang.authlib.GameProfile;
 import com.viaversion.viafabricplus.protocoltranslator.ProtocolTranslator;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.RemotePlayer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(Entity.class)
-public abstract class MixinEntity {
+@Mixin(RemotePlayer.class)
+public abstract class MixinRemotePlayer extends AbstractClientPlayer {
 
-    @Shadow
-    private int id;
+    public MixinRemotePlayer(final ClientLevel level, final GameProfile gameProfile) {
+        super(level, gameProfile);
+    }
 
-    @Inject(method = "getId", at = @At("HEAD"), cancellable = true)
-    private void allowZeroId(CallbackInfoReturnable<Integer> cir) {
-        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v26_1)) {
-            cir.setReturnValue(this.id); // TODO Remove once merged in VV on protocol level
+    @Inject(method = "shouldRenderAtSqrDistance", at = @At("HEAD"), cancellable = true)
+    private void revert10thMultiplication(final double distance, final CallbackInfoReturnable<Boolean> cir) {
+        if (ProtocolTranslator.getTargetVersion().olderThanOrEqualTo(ProtocolVersion.v1_8)) {
+            cir.setReturnValue(super.shouldRenderAtSqrDistance(distance));
         }
     }
 
